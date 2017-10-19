@@ -1,0 +1,263 @@
+{
+	http := require("http_server")
+	plan := require("plan")
+}
+
+record DbConnection(file) {
+	function query str {
+		current_row := new map
+		no_data := true
+		{} | bufferedExec "sqlite3", "-line", file, str | for line do
+			if [ line = "" ] do
+				push current_row
+				current_row = new map
+				continue
+			done
+			no_data = false
+			
+			i := indexOf("=", line)
+			n := line[:i-1]
+			v := line[i+2:]
+			
+			n ~= "^\\s*", ""
+			current_row[n] = v
+		done
+		push current_row unless no_data
+	}
+}
+
+record Person {
+	id : integer
+	name : string
+	desc : string
+	
+	function toStrMap {
+		m := new map
+		m["id"] = ""..self.id
+		m["name"] = self.name
+		m["desc"] = self.desc
+		return m
+	}
+}
+
+record PersonDao(conn) {
+	function pushPersons {
+		conn.query "SELECT id, name, desc FROM Person;" |
+		resultsToPersons
+	}
+	
+	function pushPerson(id : integer) {
+		conn.query `SELECT id, name, desc FROM Person WHERE id = $id;` |
+		resultsToPersons
+	}
+	
+	function pushFriends(id : integer) {
+		conn.query `SELECT id, name, desc FROM Person, Friend WHERE Person.id = Friend.b_id AND Friend.a_id = $id;` |
+		resultsToPersons
+	}
+	
+	function pushFriendIds(id : integer) {
+		conn.query `SELECT b_id FROM Friend WHERE a_id = $id;` |
+		push(parseInteger(line["b_id"])) for line
+	}
+	
+	function insertPerson(person : Person) {
+		/* purkkaa */
+		person.name ~= "[^a-zåäöA-ZÅÄÖ\\- ]", ""
+		person.desc ~= "[^a-zåäöA-ZÅÄÖ\\-.,;\"' ]", "", "'", "''"
+		conn.query `INSERT INTO Person(name, desc) VALUES ('${person.name}', '${person.desc}');` | {}
+	}
+	
+	function deletePerson(id : integer) {
+		conn.query `DELETE FROM Person WHERE id=$id;` | {}
+		conn.query `DELETE FROM Friend WHERE a_id=$id OR b_id=$id;` | {}
+	}
+	
+	function insertFriend(person : integer, friend : integer) {
+		conn.query `INSERT INTO Friend(a_id, b_id) VALUES ($person, $friend);` | {}
+	}
+	
+	function removeFriend(person : integer, friend : integer) {
+		conn.query `DELETE FROM Friend WHERE a_id=$person AND b_id=$friend;` | {}
+	}
+}
+
+function resultsToPersons {
+	for line do
+		person := new Person
+		person.id = parseInteger(line["id"])
+		person.name = line["name"]
+		person.desc = line["desc"]
+		push person
+	done
+}
+
+record PersonController(dao) : http.Controller {
+	@http.handle "/persons/list"
+	function handleList request {
+		variables := new map
+		variables["persons"] = [dao.pushPersons() | _.toStrMap]
+
+		request.send "200 OK", plan.execPlan("list.html.plan", variables) | concat
+	}
+	
+	@http.handle "/persons/[0-9]+"
+	function handlePerson request {
+		pid := parseInteger(match("/persons/([0-9]+)", request.path)[1])
+		person := dao.pushPerson(pid)
+		variables := new map
+		variables["person"] = person.toStrMap()
+		friends := [dao.pushFriends(pid)]
+		variables["friends"] = [friends() | _.toStrMap]
+		variables["friend_ids"] = [friends() | push `${_.id}`]
+		variables["persons"] = [dao.pushPersons() | _.toStrMap]
+
+		request.send "200 OK", plan.execPlan("person.html.plan", variables) | concat
+	}
+	
+	@http.handle "/persons/new"
+	function handleNewPerson request {
+		if [ request.command != "POST" ] do
+			methodNotAllowed request
+			return
+		done
+		for field in ["name", "desc"] if [ not request.form[field]? ]do
+			badRequest(request, field, "This field is required.")
+			return
+		done
+		
+		person := new Person
+		person.name = request.form["name"]
+		person.desc = request.form["desc"]
+		
+		dao.insertPerson person
+		
+		updateGraph dao
+		
+		request.redirect "/persons/list"
+	}
+	
+	@http.handle "/persons/new_friend"
+	function handleNewFriend request {
+		if [ request.command != "POST" ] do
+			methodNotAllowed request
+			return
+		done
+		for field in ["a_id", "b_id"] if [ not request.form[field]? ]do
+			badRequest(request, field, "This field is required.")
+			return
+		done
+		
+		a_id := parseInteger(request.form["a_id"])
+		b_id := parseInteger(request.form["b_id"])
+		
+		dao.insertFriend a_id, b_id
+		
+		updateGraph dao
+		
+		request.redirect `/persons/$a_id`
+	}
+	
+	@http.handle "/persons/delete"
+	function handleDelete request {
+		if [ request.command != "POST" ] do
+			methodNotAllowed request
+			return
+		done
+		for field in ["pid"] if [ not request.form[field]? ]do
+			badRequest(request, field, "This field is required.")
+			return
+		done
+		
+		pid := parseInteger(request.form["pid"])
+		
+		dao.deletePerson pid
+		
+		updateGraph dao
+		
+		request.redirect `/persons/list`
+	}
+	
+	@http.handle "/persons/remove_friend"
+	function handleRemoveFriend request {
+		if [ request.command != "POST" ] do
+			methodNotAllowed request
+			return
+		done
+		for field in ["a_id", "b_id"] if [ not request.form[field]? ]do
+			badRequest(request, field, "This field is required.")
+			return
+		done
+		
+		a_id := parseInteger(request.form["a_id"])
+		b_id := parseInteger(request.form["b_id"])
+		
+		dao.removeFriend a_id, b_id
+		
+		updateGraph dao
+		
+		request.redirect `/persons/$a_id`
+	}
+	
+	@http.handle "/persons/graph.png"
+	function handleGraph request {
+		request.sendFile "200 OK", "graph.png"
+	}
+	
+	function handle request {
+		request.redirect "/persons/list"
+	}
+}
+
+updateGraph dao {
+	{
+		print `digraph G {`
+		print `  concentrate=true;`
+		dao.pushPersons | for person do
+			print `  p${person.id} [label="${person.name}"];`
+			dao.pushFriendIds person.id | for fid do
+				print `  p${person.id} -> p$fid;`
+			done
+		done
+		print `}`
+	} | writeStrings "graph.dot"
+	{} | bufferedExec "dot", "-Tpng", "-o", "graph.png", "graph.dot" | {}
+}
+
+main {
+	conn := new DbConnection("persons.db")
+	dao := new PersonDao(conn)
+	
+	updateGraph dao
+	
+	serv := new http.HttpServer(25567)
+	serv.controllers["/"] = http.controller({ |request|; request.redirect "/persons/list" })
+	serv.controllers["/persons"] = new PersonController(dao)
+	while true do
+		try serv.update
+	done
+}
+
+methodNotAllowed request {
+	request.send("405 Method Not Allowed", "<html>
+		<head><title>405 Method Not Allowed</title></head>
+		<body><h1>405 Method Not Allowed</h1>
+		<hr/>
+		<p><i>http_server.röd</i></p></body>
+		</html>")
+}
+
+badRequest request, field, msg {
+	errprint "Bad request: "
+	errprint("{", [for key in [keys(request.form)] do
+		push(key, "=", request.form[key])
+	done]&", ", "}, ")
+	errprint(request.path, "\n")
+	request.send("400 Bad Request", "<html>
+	<head><title>400 Bad Request</title></head>
+	<body><h1>400 Bad Request</h1>
+	<p>The field <code>"..field.."</code> is empty. "..msg.."</p>
+	<hr/>
+	<p><i>http_server.röd</i></p></body>
+	</html>")
+}

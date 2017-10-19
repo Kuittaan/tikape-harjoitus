@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head><title>Person list</title></head>
+<body>
+<h1>Persons</h1>
+<ul>
+| for person in persons |
+	<li><a href="/persons/|person.id|">|person.name|</a></li>
+| end |
+</ul>
+
+<img src="graph.png" alt="Friend graph" />
+
+<h2>New person</h2>
+<form action="/persons/new" method="POST">
+<table>
+<tr><td>Name:</td><td><input type="text" name="name" /></td></tr>
+<tr><td>Description:</td><td><input type="text" name="desc" /></td></tr>
+<tr><td></td><td><input type="submit" value="Create" /></td></tr>
+</table>
+</form>
+</body>
+</html>
+

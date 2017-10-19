@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head><title>Person list</title></head>
+<body>
+	<a href="/persons/list">Back to main page</a>
+	<h1>|person.name|</h1>
+	<h2>Description</h2>
+	<p>|person.desc|</p>
+	<form action="/persons/delete" method="POST">
+		<input type="hidden" value="|person.id|" name="pid" />
+		<input type="submit" value="Delete" />
+	</form>
+	<h2>Friends</h2>
+	<ul>
+	| for friend in friends |
+		<li><a href="/persons/|friend.id|">|friend.name|</a></li>
+	| end |
+	</ul>
+	<h2>Add friend</h2>
+	<form action="/persons/new_friend" method="POST">
+		<input type="hidden" value="|person.id|" name="a_id" />
+		<table>
+			<tr><td>Name:</td><td>
+				<select name="b_id">
+				| for p in persons |
+					| ifn p.id eq person.id ifn p.id in friend_ids |
+						<option value="|p.id|">|p.name|</option>
+					| end end |
+				| end |
+				</select>
+			</td></tr>
+			<tr><td></td><td><input type="submit" value="Add friend" /></td></tr>
+		</table>
+	</form>
+	<h2>Remove friend</h2>
+	<form action="/persons/remove_friend" method="POST">
+		<input type="hidden" value="|person.id|" name="a_id" />
+		<table>
+			<tr><td>Name:</td><td>
+				<select name="b_id">
+				| for p in persons |
+					| ifn p.id eq person.id if p.id in friend_ids |
+						<option value="|p.id|">|p.name|</option>
+					| end end |
+				| end |
+				</select>
+			</td></tr>
+			<tr><td></td><td><input type="submit" value="Remove friend" /></td></tr>
+		</table>
+	</form>
+</body>
+</html>
+
