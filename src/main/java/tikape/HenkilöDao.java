@@ -8,15 +8,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.sql.*;
 
+import tikape.Henkilö;
+
 /**
  *
  * @author User
  */
-public class HenkiloDao {
+public class HenkilöDao {
 
     private String database;
 
-    public HenkiloDao(String database) {
+    public HenkilöDao(String database) {
         this.database = database;
 
     }
@@ -25,13 +27,13 @@ public class HenkiloDao {
         return DriverManager.getConnection(database);
     }
 
-    public List<Henkilo> haeKaikkiHenkilot() throws SQLException {
-        ArrayList<Henkilo> henkilot = new ArrayList<>();
+    public List<Henkilö> haeKaikkiHenkilöt() throws SQLException {
+        ArrayList<Henkilö> henkilot = new ArrayList<>();
         Connection connection = getConnection();
         PreparedStatement stmt = connection.prepareStatement("SELECT*FROM Henkilö");
         ResultSet result = stmt.executeQuery();
         while (result.next()) {
-            henkilot.add(new Henkilo(result.getString("nimi"), result.getString("kuvaus"), result.getString("ammatti"), result.getDate("syntymäaika")));
+            henkilot.add(new Henkilö(result.getString("nimi"), result.getString("kuvaus"), result.getString("ammatti"), result.getDate("syntymäaika")));
         }
         stmt.close();
         result.close();
@@ -39,7 +41,7 @@ public class HenkiloDao {
         return henkilot;
     }
 
-    public Henkilo haeHenkilo(int id) throws SQLException {
+    public Henkilö haeHenkilö(int id) throws SQLException {
         Connection connection = getConnection();
         PreparedStatement stmt = connection.prepareStatement("SELECT*FROM Henkilö WHERE Henkilö.id=?");
         stmt.setInt(1, id);
@@ -51,21 +53,21 @@ public class HenkiloDao {
             return null;
         }
 
-        Henkilo h = new Henkilo(rs.getString("nimi"), rs.getString("kuvaus"), rs.getString("ammatti"), rs.getDate("syntymäaika"));
+        Henkilö h = new Henkilö(rs.getString("nimi"), rs.getString("kuvaus"), rs.getString("ammatti"), rs.getDate("syntymäaika"));
         stmt.close();
 
         connection.close();
         return h;
     }
 
-    public List<Henkilo> haeHenkilonYstavat(int id) throws SQLException {
-        ArrayList<Henkilo> ystavat = new ArrayList<>();
+    public List<Henkilö> haeHenkilönYstävät(int id) throws SQLException {
+        ArrayList<Henkilö> ystavat = new ArrayList<>();
         Connection connection = getConnection();
         PreparedStatement stmt = connection.prepareStatement("SELECT*FROM Henkilö WHERE id IN(SELECT b_id FROM Ystävyys,Henkilö WHERE a_id=id and id=?);");
         stmt.setInt(1, id);
         ResultSet rs = stmt.executeQuery();
         while (rs.next()) {
-            ystavat.add(new Henkilo(rs.getString("nimi"), rs.getString("kuvaus"), rs.getString("ammatti"), rs.getDate("syntymäaika")));
+            ystavat.add(new Henkilö(rs.getString("nimi"), rs.getString("kuvaus"), rs.getString("ammatti"), rs.getDate("syntymäaika")));
         }
         stmt.close();
         rs.close();
@@ -73,7 +75,7 @@ public class HenkiloDao {
         return ystavat;
     }
 
-    public List<Integer> haeHenkilonYstavienId(int henkilonId) throws SQLException {
+    public List<Integer> haeHenkilönYstävienId(int henkilonId) throws SQLException {
         ArrayList<Integer> idt = new ArrayList<>();
         Connection connection = getConnection();
         PreparedStatement stmt = connection.prepareStatement("SELECT id FROM Henkilö WHERE id IN(SELECT b_id FROM Ystävyys,Henkilö WHERE a_id=id and id=?)");
@@ -85,7 +87,7 @@ public class HenkiloDao {
         return idt;
     }
 
-    public void luoUusiHenkilo(String nimi, Timestamp syntymaaika, String ammatti, String kuvaus) throws SQLException {
+    public void luoUusiHenkilö(String nimi, Timestamp syntymaaika, String ammatti, String kuvaus) throws SQLException {
         Connection connection = getConnection();
         PreparedStatement stmt = connection.prepareStatement("INSERT INTO Henkilö(nimi,syntymäaika,ammatti,kuvaus) VALUES (?,?,?,?)");
         stmt.setString(1, nimi);
@@ -97,7 +99,7 @@ public class HenkiloDao {
         connection.close();
     }
 
-    public void tuhoaHenkiloJaYstavyysSuhteet(int henkilonId) throws SQLException {
+    public void tuhoaHenkilöJaYstävyyssuhteet(int henkilonId) throws SQLException {
         Connection connection = getConnection();
         PreparedStatement stmt = connection.prepareStatement("DELETE FROM Ystavyys WHERE a_id=? OR b_id=?");
         stmt.setInt(1, henkilonId);
@@ -110,7 +112,7 @@ public class HenkiloDao {
         connection.close();
     }
 
-    public void luoYstävyysSuhde(int a_id, int b_id) throws SQLException {
+    public void luoYstävyyssuhde(int a_id, int b_id) throws SQLException {
         Connection connection = getConnection();
         PreparedStatement stmt = connection.prepareStatement("INSERT INTO Ystävyys (a_id,b_id) VALUES(?,?)");
         stmt.setInt(1, a_id);
@@ -120,7 +122,7 @@ public class HenkiloDao {
         connection.close();
     }
 
-    public void poistaYstavyys(int a_id, int b_id) throws SQLException {
+    public void poistaYstävyys(int a_id, int b_id) throws SQLException {
         Connection connection = getConnection();
         PreparedStatement stmt = connection.prepareStatement("DELETE FROM Ystävyys WHERE a_id=? AND b_id=?");
         stmt.setInt(1, a_id);
