@@ -33,7 +33,7 @@ public class HenkilöDao {
         PreparedStatement stmt = connection.prepareStatement("SELECT*FROM Henkilö");
         ResultSet result = stmt.executeQuery();
         while (result.next()) {
-            henkilot.add(new Henkilö(result.getString("nimi"), result.getString("kuvaus"), result.getString("ammatti"), result.getDate("syntymäaika")));
+            henkilot.add(new Henkilö(result.getInt("id"), result.getString("nimi"), result.getString("kuvaus"), result.getString("ammatti"), result.getDate("syntymäaika")));
         }
         stmt.close();
         result.close();
@@ -53,7 +53,7 @@ public class HenkilöDao {
             return null;
         }
 
-        Henkilö h = new Henkilö(rs.getString("nimi"), rs.getString("kuvaus"), rs.getString("ammatti"), rs.getDate("syntymäaika"));
+        Henkilö h = new Henkilö(rs.getInt("id"), rs.getString("nimi"), rs.getString("kuvaus"), rs.getString("ammatti"), rs.getDate("syntymäaika"));
         stmt.close();
 
         connection.close();
@@ -67,7 +67,7 @@ public class HenkilöDao {
         stmt.setInt(1, id);
         ResultSet rs = stmt.executeQuery();
         while (rs.next()) {
-            ystavat.add(new Henkilö(rs.getString("nimi"), rs.getString("kuvaus"), rs.getString("ammatti"), rs.getDate("syntymäaika")));
+            ystavat.add(new Henkilö(rs.getInt("id"), rs.getString("nimi"), rs.getString("kuvaus"), rs.getString("ammatti"), rs.getDate("syntymäaika")));
         }
         stmt.close();
         rs.close();
