@@ -33,7 +33,7 @@ public class HenkilöDao {
         PreparedStatement stmt = connection.prepareStatement("SELECT*FROM Henkilö");
         ResultSet result = stmt.executeQuery();
         while (result.next()) {
-            henkilot.add(new Henkilö(result.getInt("id"), result.getString("nimi"), result.getString("kuvaus"), result.getString("ammatti"), result.getDate("syntymäaika")));
+            henkilot.add(new Henkilö(result.getInt("id"), result.getString("nimi"), result.getString("kuvaus"), result.getString("ammatti")));
         }
         stmt.close();
         result.close();
@@ -53,7 +53,7 @@ public class HenkilöDao {
             return null;
         }
 
-        Henkilö h = new Henkilö(rs.getInt("id"), rs.getString("nimi"), rs.getString("kuvaus"), rs.getString("ammatti"), rs.getDate("syntymäaika"));
+        Henkilö h = new Henkilö(rs.getInt("id"), rs.getString("nimi"), rs.getString("kuvaus"), rs.getString("ammatti"));
         stmt.close();
 
         connection.close();
@@ -67,7 +67,7 @@ public class HenkilöDao {
         stmt.setInt(1, id);
         ResultSet rs = stmt.executeQuery();
         while (rs.next()) {
-            ystavat.add(new Henkilö(rs.getInt("id"), rs.getString("nimi"), rs.getString("kuvaus"), rs.getString("ammatti"), rs.getDate("syntymäaika")));
+            ystavat.add(new Henkilö(rs.getInt("id"), rs.getString("nimi"), rs.getString("kuvaus"), rs.getString("ammatti")));
         }
         stmt.close();
         rs.close();
@@ -87,13 +87,12 @@ public class HenkilöDao {
         return idt;
     }
 
-    public void luoUusiHenkilö(String nimi, Timestamp syntymaaika, String ammatti, String kuvaus) throws SQLException {
+    public void luoUusiHenkilö(String nimi, String ammatti, String kuvaus) throws SQLException {
         Connection connection = getConnection();
-        PreparedStatement stmt = connection.prepareStatement("INSERT INTO Henkilö(nimi,syntymäaika,ammatti,kuvaus) VALUES (?,?,?,?)");
+        PreparedStatement stmt = connection.prepareStatement("INSERT INTO Henkilö(nimi,ammatti,kuvaus) VALUES (?,?,?)");
         stmt.setString(1, nimi);
-        stmt.setTimestamp(2, syntymaaika);
-        stmt.setString(3, ammatti);
-        stmt.setString(4, kuvaus);
+        stmt.setString(2, ammatti);
+        stmt.setString(3, kuvaus);
         stmt.execute();
         stmt.close();
         connection.close();
