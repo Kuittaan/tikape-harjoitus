@@ -31,7 +31,7 @@ public class Main {
                 List<Integer> idt=dao.haeHenkilönYstävienId(h.getId());
                 HashMap map = new HashMap();
                 map.put("friends",ystävät);
-                map.put("friends_ids",idt);
+                map.put("friend_ids",idt);
                 map.put("person", h);
                 map.put("persons", henkilöt);
                 return new ModelAndView(map, "person");
@@ -41,8 +41,7 @@ public class Main {
                     String nimi = req.queryParams("nimi");
                     String ammatti = req.queryParams("ammatti");
                     String kuvaus = req.queryParams("kuvaus");
-                    Timestamp syntynyt = Timestamp.valueOf(req.queryParams("syntynyt"));
-                    dao.luoUusiHenkilö(nimi, syntynyt, ammatti, kuvaus);
+                    dao.luoUusiHenkilö(nimi, ammatti, kuvaus);
                     res.redirect("/persons/list");
                 } catch (Exception e) {
                     e.printStackTrace();

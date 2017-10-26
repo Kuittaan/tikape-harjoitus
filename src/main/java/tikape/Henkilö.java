@@ -13,15 +13,13 @@ import java.util.Date;
 public class Henkilö {
 
     private String nimi, kuvaus, ammatti;
-    private Date syntymaaika;
     private int id;
 
-    public Henkilö(int id, String nimi, String kuvaus, String ammatti, Date syntyma) {
+    public Henkilö(int id, String nimi, String kuvaus, String ammatti) {
         this.id = id;
         this.nimi = nimi;
         this.kuvaus = kuvaus;
         this.ammatti = ammatti;
-        this.syntymaaika = syntyma;
     }
 
     public int getId() {
@@ -35,11 +33,8 @@ public class Henkilö {
     public String getKuvaus() {
         return this.kuvaus;
     }
-        
-    @Override
-    public String toString(){
-        return this.nimi+", ammatti: "+ammatti+", syntynyt: "+syntymaaika+", kuvaus: "+kuvaus;
+ 
+    public String getAmmatti() {
+        return this.ammatti;
     }
-    
-
 }
