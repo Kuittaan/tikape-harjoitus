@@ -11,6 +11,7 @@ import tikape.*;
 public class Main {
     public static void main(String[] args) {
         HenkilöDao dao = new HenkilöDao("jdbc:sqlite:db/Ystavia.db");
+        Spark.staticFiles.location("/public");
         Spark.get("/", (req, res) -> {
                 res.redirect("/persons/list");
                 return "";

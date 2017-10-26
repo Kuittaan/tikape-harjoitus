@@ -1,15 +1,20 @@
 <!DOCTYPE html>
 <html>
-<head><title>Person list</title></head>
+<head>
+<title>Person list</title>
+<link rel="stylesheet" href="/css/style.css" />
+</head>
 <body>
 <h1>Persons</h1>
-<ul>
-	<li th:each="person : ${persons}">
-        	<a th:href="@{~/persons/{id}(id=${person.id})}">	
-			<span th:text="${person.nimi}">User</span>
-		</a>
-	</li>
-</ul>
+<div class="kol1">
+    <ul>
+	    <li th:each="person : ${persons}">
+            	<a th:href="@{~/persons/{id}(id=${person.id})}">	
+			    <span th:text="${person.nimi}">User</span>
+		    </a>
+	    </li>
+    </ul>
+</div>
 
 <h2>New person</h2>
 <form action="/persons/new" method="POST">
