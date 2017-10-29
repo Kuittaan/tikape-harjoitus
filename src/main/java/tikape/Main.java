@@ -65,7 +65,7 @@ public class Main {
             });
         Spark.post("/persons/delete", (req, res) -> {
                 try {
-                    int id = Integer.parseInt(req.queryParams("id"));
+                    int id = Integer.parseInt(req.queryParams("pid"));
                     dao.tuhoaHenkilöJaYstävyyssuhteet(id);
                     res.redirect("/persons/list");
                 } catch (Exception e) {
@@ -79,7 +79,7 @@ public class Main {
                     int a_id = Integer.parseInt(req.queryParams("a_id"));
                     int b_id = Integer.parseInt(req.queryParams("b_id"));
                     dao.poistaYstävyys(a_id, b_id);
-                    res.redirect("/persons/"+a_id);
+                    res.redirect("/persons/" + a_id);
                 } catch (Exception e) {
                     e.printStackTrace();
                     // virhe

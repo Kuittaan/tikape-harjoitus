@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Person list</title>
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<h1>Persons</h1>
+<div class="kol1">
+    <ul>
+	    <li th:each="person : ${persons}">
+            	<a th:href="@{~/persons/{id}(id=${person.id})}">	
+			    <span th:text="${person.nimi}">User</span>
+		    </a>
+	    </li>
+    </ul>
+</div>
+
+<h2>New person</h2>
+<form action="/persons/new" method="POST">
+<table>
+<tr><td>Name:</td><td><input type="text" name="nimi" /></td></tr>
+<tr><td>Description:</td><td><input type="text" name="kuvaus" /></td></tr>
+<tr><td>Profession:</td><td><input type="text" name="ammatti" /></td></tr>
+<tr><td></td><td><input type="submit" value="Create" /></td></tr>
+</table>
+</form>
+</body>
+</html>

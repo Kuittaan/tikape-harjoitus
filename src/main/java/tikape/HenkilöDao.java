@@ -100,7 +100,7 @@ public class HenkilöDao {
 
     public void tuhoaHenkilöJaYstävyyssuhteet(int henkilonId) throws SQLException {
         Connection connection = getConnection();
-        PreparedStatement stmt = connection.prepareStatement("DELETE FROM Ystavyys WHERE a_id=? OR b_id=?");
+        PreparedStatement stmt = connection.prepareStatement("DELETE FROM Ystävyys WHERE a_id=? OR b_id=?");
         stmt.setInt(1, henkilonId);
         stmt.setInt(2, henkilonId);
         stmt.execute();
